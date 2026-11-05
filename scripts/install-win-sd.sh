@@ -76,6 +76,9 @@ do_boot() {
     mcopy -s -i $ESP $T/esp/EFI/Microsoft ::/EFI/
     mcopy -o -i $ESP "$HERE/esp/startup.nsh" ::/EFI/BOOT/startup.nsh
     mcopy -o -i $ESP "$HERE/esp/startup.nsh" ::/startup.nsh
+    # nouhs.efi: mask UHS-I in SDC2 Capabilities_1 so Windows stays at 3.3 V (efi/nouhs.c)
+    mmd -i $ESP ::/EFI/tapas 2>/dev/null || true
+    mcopy -o -i $ESP "$HERE/efi/nouhs.efi" ::/EFI/tapas/nouhs.efi
     mdir -i $ESP -/ ::/EFI | tail -3
 }
 

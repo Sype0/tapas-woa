@@ -5,6 +5,9 @@ for %a in 0 1 2 3 4 5 6 7 8 9
     echo SD ESP found: fs%a (no log files: SD writes fail in UEFI)
     map
     if exist fs%a:\EFI\Microsoft\Boot\bootmgfw.efi then
+      if exist fs%a:\EFI\tapas\nouhs.efi then
+        fs%a:\EFI\tapas\nouhs.efi
+      endif
       echo starting Windows Boot Manager in 5 s
       stall 5000000
       fs%a:\EFI\Microsoft\Boot\bootmgfw.efi
