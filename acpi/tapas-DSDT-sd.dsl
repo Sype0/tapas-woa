@@ -1368,9 +1368,8 @@ DefinitionBlock ("", "DSDT", 2, "QCOMM ", "SM6225 ", 0x00000003)
             {
                 Memory32Fixed (ReadWrite, 0x04784000, 0x00001000, )
                 Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive, ,, ) { 0x0000017E }
-                // pwr_irq (GIC SPI 353 = GSIV 385): sdhci-msm raises it on every bus power / IO
-                // voltage write and waits for an ack; 0x7B without it (2026-11-05 test 5).
-                Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive, ,, ) { 0x00000181 }
+                // pwr_irq (GSIV 385) removed again for test 11: tests 5 and 6 showed it did not fix
+                // 0x7B, and with it test 10 hit SDBUS_INTERNAL_ERROR P4=0x102 (STATUS_TIMEOUT).
             })
             Method (_DIS, 0, NotSerialized)
             {
