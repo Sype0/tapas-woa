@@ -63,7 +63,7 @@ do_boot() {
     cp $B/Templates/BCD-NEW $T/BCD
     hivexregedit --merge --prefix BCD00000001 $T/BCD $B/Templates/winload.reg
     (cd $B && bash ./winload.sh $T/src $T/esp uefi false true false "" tr-tr false false) > $T/winload.txt
-    hivexsh -w $T/BCD -f $T/winload.txt
+    hivexsh -w -f $T/winload.txt $T/BCD
     # test signing (16000049) on the Windows loader, like topaz-woa; boot manager timeout 0
     def=$(printf 'cd Objects\\{9dea862c-5cdd-4e70-acc1-f32b344d4795}\\Elements\\23000003\nlsval Element\nunload\n' | hivexsh $T/BCD | tr -d '"')
     printf 'cd Objects\\%s\\Elements\nadd 16000049\ncd 16000049\nsetval 1\nElement\nhex:3:01\ncommit\nunload\n' "$def" | hivexsh -w $T/BCD

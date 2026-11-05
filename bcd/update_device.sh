@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 # update_device.sh for BCD-SYS: tapas SD card (mmcblk1) GPT GUIDs. ESP = p1 "esp", Windows = p3 "win" (from scripts/sd-part.sh)
 DISK=BA98F02E-E9FF-4E18-A842-D72831D8BFAD
 ESP=F653557C-E01C-41DD-A2EE-74FD05E9D952
