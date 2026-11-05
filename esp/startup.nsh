@@ -2,17 +2,15 @@
 echo tapas SD test: looking for the ESP
 for %a in 0 1 2 3 4 5 6 7 8 9
   if exist fs%a:\tapas-esp.txt then
-    echo SD ESP found: fs%a
-    echo ok >a fs%a:\done.txt
-    map >a fs%a:\map.txt
-    devtree >a fs%a:\devtree.txt
-    drivers >a fs%a:\drivers.txt
-    dh -p BlockIo >a fs%a:\blockio.txt
-    echo logs written
+    echo SD ESP found: fs%a (no log files: SD writes fail in UEFI)
+    map
     if exist fs%a:\EFI\Microsoft\Boot\bootmgfw.efi then
-      echo starting Windows Boot Manager in 3 s
-      stall 3000000
+      echo starting Windows Boot Manager in 5 s
+      stall 5000000
       fs%a:\EFI\Microsoft\Boot\bootmgfw.efi
+      echo bootmgfw returned
+    else
+      echo bootmgfw.efi NOT found on fs%a
     endif
   endif
 endfor
