@@ -1362,6 +1362,10 @@ DefinitionBlock ("", "DSDT", 2, "QCOMM ", "SM6225 ", 0x00000003)
             // Values from the Android DT: hc 0x04784000 (0x1000), hc_irq GIC SPI 350 = GSIV 382.
             // Test 12: HID QCOM24BF -> QCOM2466 (sdbus.inf 8974Std: same CompatType 10 but without
             // OverrideFlags 0x80000000). QCOM24BF gave SDBUS_INTERNAL_ERROR P4=0x102 in tests 10+11.
+            // Reference: Qualcomm-BSP-style SM6225 SD table (Lunarixus/Mu-Qcom fogPkg sdc.asl) and
+            // Surface Duo sdc.asl both use QCOM2466 for the SD slot; QCOM24BF is only used for eMMC
+            // (SDC1). fog: same 0x04784000 / GSIV 382, plus GpioInt card detect on GIO0 (needs the
+            // non-inbox qcgpio driver, so we keep the SDCD child instead).
             Name (_HID, "QCOM2466")
             Name (_CID, "ACPIQCOM2466")
             Name (_UID, One)
