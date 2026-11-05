@@ -1383,6 +1383,14 @@ DefinitionBlock ("", "DSDT", 2, "QCOMM ", "SM6225 ", 0x00000003)
             {
                 Return (0x0F)
             }
+            // Non-removable child like Kamorta SDC1 (EMMC) / UFS0 (DEV0): sdhci-msm card detect in
+            // PRESENT_STATE is broken (Linux uses cd-gpio 88), so without this sdbus sees no card
+            // and Windows stops with 0x7B (2026-11-05 tests 5+6). The SD is the boot disk anyway.
+            Device (SDCD)
+            {
+                Name (_ADR, 0x08)
+                Name (_RMV, Zero)
+            }
         }
         Device (GPU0)
         {
