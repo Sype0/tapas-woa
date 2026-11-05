@@ -3,6 +3,7 @@
 # Usage: scripts/build-uefi.sh <workdir> <out.img> [RELEASE|DEBUG]
 # Differences from topaz-woa's own build:
 #  - AbSlot.c GPT writes disabled: this UEFI never writes to UFS (slot attributes stay as ABL set them).
+#  - DSDT adds SDC2 (SD card) as PNP0D40 for the inbox Windows sdbus driver.
 #  - mu_v4pack.sh uses AOSP mkbootimg from <workdir>/mkbootimg instead of a hard-coded path.
 set -euo pipefail
 W=$(realpath -m "$1"); OUT=$(realpath -m "$2"); TARGET=${3:-RELEASE}
@@ -25,6 +26,9 @@ U=topaz-woa/uefi
 sed -i 's/s = Bio->WriteBlocks (Bio, Bio->Media->MediaId, [^;]*;/s = EFI_WRITE_PROTECTED; \/* tapas-woa: UFS read-only *\//' $U/TopazOtgDxe/AbSlot.c
 if grep -q 'WriteBlocks' $U/TopazOtgDxe/*.c; then echo "WriteBlocks still present" >&2; exit 1; fi
 sed -i "s#/home/makr/work/topaz/mkbootimg_src#$W/mkbootimg#g" $U/mu_v4pack.sh
+
+# DSDT: topaz XHCI DSDT + SDC2 as a standard SDHCI host (PNP0D40), source acpi/tapas-DSDT-sd.dsl
+cp "$HERE/../acpi/tapas-DSDT-sd.aml" $U/acpi/tapas-DSDT-xhci.aml
 
 bash $U/build_topaz_uefi.sh "$W/Mu-Silicium" "$OUT" "$TARGET"
 sha256sum "$OUT"
