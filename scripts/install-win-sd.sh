@@ -79,14 +79,21 @@ do_boot() {
     mdir -i $ESP -/ ::/EFI | tail -3
 }
 
-do_system() {   # sdbus + sdstor as boot-start drivers (SDC2 is PNP0D40 in our DSDT)
+do_system() {   # sdbus + sdstor as boot-start drivers (SDC2 is QCOM24BF in our DSDT)
+    # hivexsh "setval" REPLACES ALL VALUES of a key, so write the complete 22621 service values
+    # (copied from the image's untouched SYSTEM hive), only Start changed 3 -> 0.
     check_sd
     ntfscat $WIN /Windows/System32/config/SYSTEM > $T/SYSTEM
-    for s in sdbus sdstor; do
-        printf 'cd ControlSet001\\Services\\%s\nlsval Start\nunload\n' $s | hivexsh $T/SYSTEM || { echo "no service $s" >&2; exit 1; }
-        printf 'cd ControlSet001\\Services\\%s\nsetval 1\nStart\ndword:0\ncommit\nunload\n' $s | hivexsh -w $T/SYSTEM
-        printf 'cd ControlSet001\\Services\\%s\nlsval Start\nunload\n' $s | hivexsh $T/SYSTEM
-    done
+    owners() { printf '%s' "$1.inf" | od -An -tx1 -v | tr -s ' \n' ' ' | sed 's/^ //;s/ $//' |
+        awk '{for(i=1;i<=NF;i++) printf "%s,00,", $i; print "00,00,00,00"}'; }
+    {
+    printf 'cd ControlSet001\\Services\\sdbus\nsetval 8\n'
+    printf 'ImagePath\nexpandstring:\\SystemRoot\\System32\\drivers\\sdbus.sys\nType\ndword:1\nStart\ndword:0\nErrorControl\ndword:1\nGroup\nstring:System Bus Extender\nTag\ndword:5\nOwners\nhex:7:%s\nBootFlags\ndword:8\n' "$(owners sdbus)"
+    printf 'cd \\ControlSet001\\Services\\sdstor\nsetval 7\n'
+    printf 'ImagePath\nexpandstring:\\SystemRoot\\System32\\drivers\\sdstor.sys\nType\ndword:1\nStart\ndword:0\nErrorControl\ndword:1\nDisplayName\nstring:@sdstor.inf,%%sdstor_ServiceDesc%%;SD Storage Port Driver\nOwners\nhex:7:%s\nBootFlags\ndword:8\n' "$(owners sdstor)"
+    printf 'commit\n'
+    } | hivexsh -w $T/SYSTEM
+    for s in sdbus sdstor; do printf 'cd ControlSet001\\Services\\%s\nlsval\n' $s | hivexsh $T/SYSTEM; done
     ntfscp -f $WIN $T/SYSTEM /Windows/System32/config/SYSTEM
 }
 
