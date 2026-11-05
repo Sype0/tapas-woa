@@ -2,7 +2,7 @@ name: Build UEFI
 on:
   push:
     branches: [main]
-    paths: ['scripts/build-uefi.sh', '.github/workflows/uefi.yml', 'uefi/**']
+    paths: ['scripts/build-uefi.sh', '.github/workflows/uefi.yml', 'uefi/**', 'acpi/**']
   workflow_dispatch:
 jobs:
   build:

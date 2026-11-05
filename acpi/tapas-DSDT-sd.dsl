@@ -1356,18 +1356,26 @@ DefinitionBlock ("", "DSDT", 2, "QCOMM ", "SM6225 ", 0x00000003)
         }
         Device (SDC2)
         {
-            // tapas-woa: SD card slot (sdhci-msm-v5 SDC2) as a standard SDHCI host for the inbox
-            // sdbus/sdstor stack, so Windows can boot from the SD card. UEFI SdccDxe leaves
-            // clocks/regulators/pins on. Values from the Android DT: hc 0x04784000, hc_irq SPI 350.
-            Name (_HID, "PNP0D40")
+            // tapas-woa: SD card slot (sdhci-msm-v5 SDC2) for the inbox sdbus driver's Qualcomm
+            // mode (sdbus.inf: ACPI\QCOM24BF -> CompatType 10 "8994 Std"), defined like Silicium's
+            // Kamorta (SM6115) SDC1. UEFI SdccDxe leaves clocks/regulators/pins on.
+            // Values from the Android DT: hc 0x04784000 (0x1000), hc_irq GIC SPI 350 = GSIV 382.
+            Name (_HID, "QCOM24BF")
+            Name (_CID, "ACPIQCOM24BF")
             Name (_UID, One)
             Name (_CCA, Zero)
-            Name (_S0W, Zero)
             Name (_CRS, ResourceTemplate ()
             {
                 Memory32Fixed (ReadWrite, 0x04784000, 0x00001000, )
-                Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive, ,, ) { 0x0000017E }  // GIC SPI 350
+                Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive, ,, ) { 0x0000017E }
             })
+            Method (_DIS, 0, NotSerialized)
+            {
+            }
+            Method (_SUB, 0, NotSerialized)
+            {
+                Return (PSUB)
+            }
             Method (_STA, 0, NotSerialized)
             {
                 Return (0x0F)
