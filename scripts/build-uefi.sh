@@ -27,6 +27,16 @@ sed -i 's/s = Bio->WriteBlocks (Bio, Bio->Media->MediaId, [^;]*;/s = EFI_WRITE_P
 if grep -q 'WriteBlocks' $U/TopazOtgDxe/*.c; then echo "WriteBlocks still present" >&2; exit 1; fi
 sed -i "s#/home/makr/work/topaz/mkbootimg_src#$W/mkbootimg#g" $U/mu_v4pack.sh
 
+# GOP inset: the panel has rounded corners + a punch hole, so the BSOD bug check parameters (drawn at
+# the top-left of the GOP mode) are cut off. Report a smaller mode inside the panel (stride stays 1080).
+FB=Mu-Silicium/Silicon/Silicium/SiliciumPkg/Drivers/SimpleFbDxe/SimpleFb.c
+if ! grep -q 'tapas-woa: GOP inset' $FB; then
+  sed -i 's|^  \*BaseAddress = FrameBufferRegion.Address;|  *BaseAddress = FrameBufferRegion.Address + (EFI_PHYSICAL_ADDRESS)((160 * *Width + 64) * (*ColorDepth / 8)); /* tapas-woa: GOP inset */\n  *Width  -= 128;\n  *Height -= 320;|' $FB
+  sed -i 's|^  mFrameBuffer.Mode->FrameBufferSize = Width \* Height \* (ColorDepth / 8);|  mFrameBuffer.Mode->FrameBufferSize = FixedPcdGet32 (PcdFrameBufferWidth) * Height * (ColorDepth / 8);|' $FB
+  sed -i 's|^  mFrameBuffer.Mode->Info->PixelsPerScanLine    = Width;|  mFrameBuffer.Mode->Info->PixelsPerScanLine    = FixedPcdGet32 (PcdFrameBufferWidth);|' $FB
+  [ "$(grep -c 'tapas-woa: GOP inset\|FixedPcdGet32 (PcdFrameBufferWidth) \* Height\|PixelsPerScanLine    = FixedPcdGet32' $FB)" = 3 ] || { echo "SimpleFb inset patch failed" >&2; exit 1; }
+fi
+
 # DSDT: topaz XHCI DSDT + SDC2 as QCOM24BF (inbox sdbus Qualcomm mode), source acpi/tapas-DSDT-sd.dsl
 cp "$HERE/../acpi/tapas-DSDT-sd.aml" $U/acpi/tapas-DSDT-xhci.aml
 
