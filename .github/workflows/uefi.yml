@@ -1,0 +1,34 @@
+name: Build UEFI
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/build-uefi.sh', '.github/workflows/uefi.yml', 'uefi/**']
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git mono-devel build-essential lld uuid-dev nasm gcc-aarch64-linux-gnu \
+            python3 python3-pip python3-venv python3-pil clang llvm curl
+          curl -s https://raw.githubusercontent.com/Project-Silicium/Mu-Silicium/e5f9ec06/pip-requirements.txt -o /tmp/req.txt
+          python3 -m pip install --break-system-packages -r /tmp/req.txt
+      - name: Build
+        run: |
+          bash scripts/build-uefi.sh "$RUNNER_TEMP/w" "$GITHUB_WORKSPACE/Mu-tapas-v4-RELEASE.img" RELEASE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uefi
+          path: Mu-tapas-v4-*.img
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete uefi-latest -y --cleanup-tag || true
+          gh release create uefi-latest Mu-tapas-v4-*.img --title "UEFI (latest)" \
+            --notes "Mu-Silicium tapas + topaz-woa patches, UFS writes disabled. Test with: fastboot boot Mu-tapas-v4-RELEASE.img (never flash untested)."
