@@ -1360,8 +1360,10 @@ DefinitionBlock ("", "DSDT", 2, "QCOMM ", "SM6225 ", 0x00000003)
             // mode (sdbus.inf: ACPI\QCOM24BF -> CompatType 10 "8994 Std"), defined like Silicium's
             // Kamorta (SM6115) SDC1. UEFI SdccDxe leaves clocks/regulators/pins on.
             // Values from the Android DT: hc 0x04784000 (0x1000), hc_irq GIC SPI 350 = GSIV 382.
-            Name (_HID, "QCOM24BF")
-            Name (_CID, "ACPIQCOM24BF")
+            // Test 12: HID QCOM24BF -> QCOM2466 (sdbus.inf 8974Std: same CompatType 10 but without
+            // OverrideFlags 0x80000000). QCOM24BF gave SDBUS_INTERNAL_ERROR P4=0x102 in tests 10+11.
+            Name (_HID, "QCOM2466")
+            Name (_CID, "ACPIQCOM2466")
             Name (_UID, One)
             Name (_CCA, Zero)
             Name (_CRS, ResourceTemplate ()
