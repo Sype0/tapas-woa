@@ -18,6 +18,8 @@ typedef unsigned short u16;
 #define SDC2_HC 0x04784000ULL
 #define CAPS0 0x40
 #define CAPS1 0x44
+#define VCAPS0 0x21c /* CORE_VENDOR_SPEC_CAPABILITIES0 (v5) */
+#define VCAPS1 0x220 /* CORE_VENDOR_SPEC_CAPABILITIES1 (v5) */
 #define UHS_MASK 0x7u /* bit0 SDR50, bit1 SDR104, bit2 DDR50 */
 
 struct out { void *reset; u64 (*print)(struct out *, u16 *); };
@@ -49,19 +51,31 @@ static inline void wr(u32 off, u32 v) { *(volatile u32 *)(SDC2_HC + off) = v; }
 
 u64 efi_main(void *image, struct st *st)
 {
-	u32 c0, c1, n;
+	u32 c0, c1, n, v0, v1;
 	(void)image;
 	con = st->cout;
 	c0 = rd(CAPS0); c1 = rd(CAPS1);
+	v0 = rd(VCAPS0); v1 = rd(VCAPS1);
 	puts16("nouhs: SDC2 caps0 "); hex(c0); puts16(" caps1 "); hex(c1); puts16("\n");
-	if (c1 & UHS_MASK) {
-		wr(CAPS1, c1 & ~UHS_MASK);
-		n = rd(CAPS1);
-		puts16("nouhs: caps1 now "); hex(n);
-		puts16((n & UHS_MASK) ? "  (NOT writable, UHS still on)\n" : "  (UHS off)\n");
-	} else {
+	puts16("nouhs: vendor 0x21c "); hex(v0); puts16(" 0x220 "); hex(v1); puts16("\n");
+	if (!(c1 & UHS_MASK)) {
 		puts16("nouhs: UHS already off\n");
+		goto out;
 	}
-	st->bs->stall(3000000);
+	/* 1) SDHCI Capabilities_1 itself (read-only on this SoC: test 8 said NOT writable) */
+	wr(CAPS1, c1 & ~UHS_MASK);
+	n = rd(CAPS1);
+	puts16("nouhs: [0x44] caps1 now "); hex(n); puts16("\n");
+	if (n & UHS_MASK) {
+		/* 2) sdhci-msm v5 vendor shadow CORE_VENDOR_SPEC_CAPABILITIES1 (0x220); writing it
+		 *    replaces what Capabilities_1 reads back. Write the wanted caps1 value. */
+		wr(VCAPS1, c1 & ~UHS_MASK);
+		n = rd(CAPS1);
+		puts16("nouhs: [0x220] caps1 now "); hex(n);
+		puts16(" 0x220 "); hex(rd(VCAPS1)); puts16("\n");
+	}
+	puts16((n & UHS_MASK) ? "nouhs: RESULT UHS STILL ON\n" : "nouhs: RESULT UHS OFF\n");
+out:
+	st->bs->stall(8000000);
 	return 0;
 }
